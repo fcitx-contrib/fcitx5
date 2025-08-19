@@ -35,16 +35,20 @@ using LogRule = std::pair<std::string, LogLevel>;
 
 struct LogConfig {
     static std::ostream *defaultLogStream;
+#if 0
     static thread_local std::osyncstream localLogStream;
+#endif
     static bool showTimeDate;
 };
 
 std::ostream *LogConfig::defaultLogStream = &std::cerr;
+#if 0
 thread_local std::osyncstream LogConfig::localLogStream = []() {
     std::osyncstream out(*LogConfig::defaultLogStream);
     out.rdbuf()->set_emit_on_sync(true);
     return out;
 }();
+#endif
 bool LogConfig::showTimeDate = true;
 
 bool validateLogLevel(std::underlying_type_t<LogLevel> l) {
@@ -199,12 +203,15 @@ void Log::setLogStream(std::ostream &stream) {
 }
 
 std::ostream &Log::logStream() {
+#if 0
     auto *buf = LogConfig::defaultLogStream->rdbuf();
     if (LogConfig::localLogStream.get_wrapped() != buf) {
         LogConfig::localLogStream = std::osyncstream(buf);
         LogConfig::localLogStream.rdbuf()->set_emit_on_sync(true);
     }
     return LogConfig::localLogStream;
+#endif
+    return *LogConfig::defaultLogStream;
 }
 
 LogMessageBuilder::LogMessageBuilder(std::ostream &out, LogLevel l,
